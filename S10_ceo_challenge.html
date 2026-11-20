@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CEO Challenge — Toma el control</title>
+<style>
+:root{
+ --bg:#f4f6f9;--panel:#fff;--card:#f8fafc;--text:#172033;--muted:#687386;
+ --border:#dce2ea;--accent:#4f46e5;--accent2:#eef2ff;--good:#15803d;--warn:#b45309;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input{font:inherit}
+button{cursor:pointer}
+.wrap{max-width:980px;margin:0 auto;padding:24px}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:22px;margin-bottom:18px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.eyebrow{font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--muted)}
+h1{margin:5px 0 4px;font-size:30px}
+h2{font-size:20px;margin:0 0 6px}
+p{line-height:1.5}
+.muted{color:var(--muted)}
+.dots{display:flex;gap:8px;padding-top:10px}.dot{width:12px;height:12px;border-radius:50%;background:var(--border)}.dot.on{background:var(--accent)}
+.scenario{margin-top:16px;padding:15px;border-radius:14px;background:var(--card)}
+.balance{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.stat,.decision,.mini{background:var(--panel);border:1px solid var(--border);border-radius:15px;padding:17px}
+.stat .label{font-size:14px;color:var(--muted)}.stat .value{font-size:26px;font-weight:850;margin:5px 0}.stat .type{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--muted)}
+.substats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.mini{padding:11px 14px;font-size:14px}
+.decisions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.decision{text-align:left;min-height:92px;transition:.15s}.decision:hover{border-color:var(--accent);transform:translateY(-1px)}.decision strong{display:block;font-size:16px}.decision span{display:block;color:var(--muted);font-size:14px;margin-top:5px;line-height:1.4}.decision.wide{grid-column:1/-1}
+.amountRow{display:flex;gap:9px;align-items:stretch;margin-top:10px}.moneyInput{display:flex;align-items:center;flex:1;border:1px solid var(--border);border-radius:12px;background:var(--card);padding:0 12px}.moneyInput input{width:100%;border:0;outline:0;background:transparent;padding:14px 8px;font-size:17px}
+.primary,.secondary{border-radius:12px;padding:12px 18px;min-height:48px;font-weight:800}.primary{background:var(--accent);color:#fff;border:1px solid var(--accent)}.secondary{background:#fff;color:var(--text);border:1px solid var(--border)}
+.message{font-size:14px;margin-top:10px;color:var(--warn);font-weight:650}
+.hidden{display:none!important}
+.changegrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:15px}.change{background:var(--card);border-radius:13px;padding:13px}.change small{color:var(--muted)}.change strong{display:block;margin-top:5px}
+.lesson{margin-top:15px;background:var(--accent2);padding:15px;border-radius:14px}
+.full{width:100%;margin-top:15px}
+table{width:100%;border-collapse:collapse;background:#fff}th,td{padding:12px;border-bottom:1px solid var(--border);text-align:right}th:first-child,td:first-child{text-align:left}th{background:var(--card)}
+.tablewrap{overflow:auto;border:1px solid var(--border);border-radius:14px}
+.center{text-align:center}.equation{font-size:21px;font-weight:900;background:var(--card);border-radius:14px;padding:18px;margin:15px 0}
+.profile{max-width:520px;margin:14px auto 0;background:var(--card);border-radius:14px;padding:16px}
+@media(max-width:650px){.wrap{padding:14px}.balance,.changegrid,.decisions,.substats{grid-template-columns:1fr}.decision.wide{grid-column:auto}.amountRow{flex-direction:column}h1{font-size:25px}.stat .value{font-size:23px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main class="wrap" id="game">
+ <section class="panel">
+  <div class="top">
+   <div><div class="eyebrow">CEO CHALLENGE</div><h1>Toma el control de la empresa</h1><div id="roundLabel" class="muted"></div></div>
+   <div id="dots" class="dots" aria-label="Progreso"></div>
+  </div>
+  <div id="scenario" class="scenario"></div>
+ </section>
+
+ <section style="margin-bottom:18px">
+  <div class="top" style="align-items:end;margin-bottom:9px"><h2>Tu empresa ahora</h2><span class="muted" style="font-size:12px">Todos los valores están en pesos</span></div>
+  <div class="balance">
+   <div class="stat"><div class="label">🏢 Lo que tiene</div><div id="asset" class="value"></div><div class="type">ACTIVO</div></div>
+   <div class="stat"><div class="label">🏦 Lo que debe</div><div id="liability" class="value"></div><div class="type">PASIVO</div></div>
+   <div class="stat"><div class="label">👥 De los propietarios</div><div id="equity" class="value"></div><div class="type">CAPITAL</div></div>
+  </div>
+  <div class="substats"><div class="mini">💵 <strong>Efectivo disponible:</strong> <span id="cash"></span></div><div class="mini">🏭 <strong>Otros activos:</strong> <span id="other"></span></div></div>
+ </section>
+
+ <section id="decisionArea" class="panel">
+  <h2>¿Qué quieres hacer?</h2><p class="muted" style="margin-top:0">Elige una decisión. Después tú indicarás el monto.</p>
+  <div class="decisions">
+   <button class="decision" data-action="loan"><strong>🏦 Pedir un préstamo</strong><span>Obtén recursos del banco para tu empresa.</span></button>
+   <button class="decision" data-action="equipment"><strong>🏭 Comprar equipo</strong><span>Invierte efectivo en capacidad para el negocio.</span></button>
+   <button class="decision" data-action="partner"><strong>🤝 Incorporar inversión</strong><span>Los propietarios aportan nuevos recursos.</span></button>
+   <button class="decision" data-action="paydebt"><strong>💳 Pagar deuda</strong><span>Utiliza efectivo para reducir obligaciones.</span></button>
+   <button class="decision wide" data-action="campaign"><strong>📣 Lanzar una campaña comercial</strong><span>Invierte para buscar ventas. El resultado no está garantizado.</span></button>
+  </div>
+ </section>
+
+ <section id="amountPanel" class="panel hidden">
+  <h2 id="chosenTitle"></h2>
+  <label for="amount"><strong>¿Qué monto quieres utilizar?</strong></label>
+  <div class="amountRow">
+   <div class="moneyInput"><strong>$</strong><input id="amount" type="number" min="1" step="10000" placeholder="Ej. 200000"></div>
+   <button id="execute" class="primary">Ejecutar decisión 🚀</button>
+   <button id="cancel" class="secondary">Cambiar</button>
+  </div>
+  <div id="validation" class="message" aria-live="polite"></div>
+ </section>
+
+ <section id="resultPanel" class="panel hidden" aria-live="polite">
+  <div class="eyebrow">✓ DECISIÓN EJECUTADA</div>
+  <h2 id="resultTitle" style="margin-top:5px"></h2>
+  <p id="resultText"></p>
+  <div id="changeGrid" class="changegrid"></div>
+  <div id="lesson" class="lesson"></div>
+  <button id="next" class="primary full">Continuar →</button>
+ </section>
+
+ <section id="finalPanel" class="hidden">
+  <div class="panel center"><div class="eyebrow">🏁 CEO CHALLENGE COMPLETADO</div><h1>Así dejaste tu empresa</h1><div id="profile" class="profile"></div></div>
+  <div class="tablewrap" style="margin-bottom:18px"><table><thead><tr><th>Momento</th><th>Activo</th><th>Pasivo</th><th>Capital</th></tr></thead><tbody id="history"></tbody></table></div>
+  <div class="panel center"><h2>🔎 Hay algo que quizá no notaste...</h2><p>Durante las tres rondas hubo una relación que <strong>nunca pudiste romper.</strong></p><div id="equation" class="equation"></div><h1 style="font-size:25px">ACTIVO = PASIVO + CAPITAL</h1><p class="muted">Sin darte cuenta, acabas de utilizar la ecuación fundamental del balance general.</p></div>
+  <button id="restart" class="secondary full">↻ Jugar otra vez</button>
+ </section>
+</main>
+
+<script>
+(()=>{
+ const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+ const money=n=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0}).format(Math.round(n));
+ let state,round,selected,history,actions;
+ const defs={
+  loan:{title:'🏦 Pedir un préstamo',lesson:'Tener más dinero disponible no significa que los propietarios sean más ricos: también adquiriste una obligación.'},
+  equipment:{title:'🏭 Comprar equipo',lesson:'El dinero no desapareció: cambió de forma. Bajó el efectivo y aumentaron otros activos; el activo total permaneció igual.'},
+  partner:{title:'🤝 Incorporar inversión',lesson:'La empresa recibió recursos sin generar deuda. La aportación incrementó la participación de los propietarios.'},
+  paydebt:{title:'💳 Pagar deuda',lesson:'Usaste recursos de la empresa para reducir una obligación. Tener menos efectivo no significa necesariamente estar peor.'},
+  campaign:{title:'📣 Campaña comercial',lesson:'Las decisiones comerciales tienen riesgo: invertir recursos puede producir ganancias, recuperar solamente lo invertido o generar una pérdida.'}
+ };
+ const asset=()=>state.cash+state.other;
+ const snap=label=>({label,asset:asset(),liability:state.liability,equity:state.equity});
+ function render(){
+  $('#asset').textContent=money(asset()); $('#liability').textContent=money(state.liability); $('#equity').textContent=money(state.equity);
+  $('#cash').textContent=money(state.cash); $('#other').textContent=money(state.other);
+ }
+ function setupRound(){
+  render(); $('#decisionArea').classList.remove('hidden'); $('#amountPanel').classList.add('hidden'); $('#resultPanel').classList.add('hidden');
+  const names=['Conoce tu empresa','Ahora es tuya','El reto del CEO'];
+  $('#roundLabel').textContent=`Ronda ${round} de 3 · ${names[round-1]}`;
+  $('#dots').innerHTML=[1,2,3].map(i=>`<span class="dot ${i<=round?'on':''}"></span>`).join('');
+  $('#scenario').innerHTML=round===1?'Te acaban de nombrar director. Recibes una empresa funcionando y tendrás <strong>3 decisiones</strong> para transformarla. No existe una única estrategia correcta.':round===2?'Tu primera decisión ya tuvo consecuencias. <strong>Ahora decide nuevamente</strong> partiendo de la empresa que construiste.':'⚡ <strong>Último reto:</strong> un competidor está creciendo y el consejo espera una decisión. ¿Cómo quieres responder?';
+ }
+ $$('.decision').forEach(b=>b.addEventListener('click',()=>{
+  selected=b.dataset.action; $('#chosenTitle').textContent=defs[selected].title; $('#amount').value=''; $('#validation').textContent='';
+  $('#amountPanel').classList.remove('hidden'); $('#amount').focus();
+ }));
+ $('#cancel').addEventListener('click',()=>{$('#amountPanel').classList.add('hidden');selected=null});
+ $('#execute').addEventListener('click',()=>{
+  let amt=Math.round(Number($('#amount').value)); $('#validation').textContent='';
+  if(!Number.isFinite(amt)||amt<=0){$('#validation').textContent='Ingresa un monto mayor a $0.';return}
+  if((selected==='equipment'||selected==='paydebt'||selected==='campaign')&&amt>state.cash){$('#validation').textContent=`No tienes suficiente efectivo. Disponible: ${money(state.cash)}.`;return}
+  if(selected==='paydebt'&&amt>state.liability){$('#validation').textContent=`No puedes pagar más de lo que debes: ${money(state.liability)}.`;return}
+  const before=snap('Antes'); let text='';
+  if(selected==='loan'){state.cash+=amt;state.liability+=amt;text=`El banco prestó ${money(amt)} a tu empresa.`}
+  if(selected==='equipment'){state.cash-=amt;state.other+=amt;text=`Invertiste ${money(amt)} del efectivo en equipo para la empresa.`}
+  if(selected==='partner'){state.cash+=amt;state.equity+=amt;text=`Los propietarios aportaron ${money(amt)} adicionales.`}
+  if(selected==='paydebt'){state.cash-=amt;state.liability-=amt;text=`Pagaste ${money(amt)} de las obligaciones de la empresa.`}
+  if(selected==='campaign'){
+   const outcomes=[0.65,1,1.35,1.6], factor=outcomes[Math.floor(Math.random()*outcomes.length)], returned=Math.round(amt*factor), profit=returned-amt;
+   state.cash=state.cash-amt+returned; state.equity+=profit;
+   text=profit>0?`La campaña costó ${money(amt)} y generó ${money(returned)}. Obtuviste una ganancia de ${money(profit)}.`:profit===0?`La campaña recuperó exactamente los ${money(amt)} invertidos. No hubo ganancia ni pérdida.`:`La campaña costó ${money(amt)} y solo recuperó ${money(returned)}. La pérdida fue de ${money(-profit)}.`;
+  }
+  const after=snap(`Ronda ${round}`); history.push(after); actions.push(selected);
+  $('#resultTitle').textContent=defs[selected].title; $('#resultText').textContent=text;
+  const items=[['🏢 Activo',before.asset,after.asset],['🏦 Pasivo',before.liability,after.liability],['👥 Capital',before.equity,after.equity]];
+  $('#changeGrid').innerHTML=items.map(([name,a,b])=>`<div class="change"><small>${name}</small><strong>${money(a)} → ${money(b)} ${b>a?'↑':b<a?'↓':'—'}</strong></div>`).join('');
+  $('#lesson').innerHTML=`💡 <strong>Descubrimiento:</strong> ${defs[selected].lesson}`;
+  $('#decisionArea').classList.add('hidden'); $('#amountPanel').classList.add('hidden'); $('#resultPanel').classList.remove('hidden'); render();
+ });
+ $('#next').addEventListener('click',()=>{if(round<3){round++;setupRound()}else finish()});
+ function finish(){
+  $('#resultPanel').classList.add('hidden'); $('#decisionArea').classList.add('hidden'); $('#finalPanel').classList.remove('hidden');
+  $('#history').innerHTML=history.map(h=>`<tr><td>${h.label}</td><td>${money(h.asset)}</td><td>${money(h.liability)}</td><td>${money(h.equity)}</td></tr>`).join('');
+  const last=history.at(-1); $('#equation').textContent=`${money(last.asset)} = ${money(last.liability)} + ${money(last.equity)}`;
+  const counts=actions.reduce((o,a)=>(o[a]=(o[a]||0)+1,o),{}); let p=['⚖️ CEO Equilibrado','Combinaste distintas decisiones para transformar la empresa.'];
+  if((counts.loan||0)>=2)p=['🚀 CEO Expansivo','Usaste financiamiento como herramienta para disponer de más recursos.'];
+  else if((counts.paydebt||0)>=2)p=['🛡️ CEO Prudente','Priorizaste reducir las obligaciones de la empresa.'];
+  else if((counts.campaign||0)>=2)p=['📣 CEO Comercial','Apostaste principalmente por generar negocio y asumir riesgo comercial.'];
+  else if((counts.partner||0)>=2)p=['🤝 CEO Estratégico','Preferiste fortalecer la empresa mediante aportaciones de los propietarios.'];
+  else if((counts.equipment||0)>=2)p=['🏭 CEO Inversionista','Concentraste tus decisiones en transformar efectivo en capacidad productiva.'];
+  $('#profile').innerHTML=`<strong style="font-size:20px">${p[0]}</strong><p class="muted" style="margin-bottom:0">${p[1]}</p>`;
+ }
+ function reset(){
+  state={cash:500000,other:500000,liability:300000,equity:700000}; round=1; selected=null;
+  history=[{label:'Inicio',asset:1000000,liability:300000,equity:700000}]; actions=[];
+  $('#finalPanel').classList.add('hidden'); setupRound();
+ }
+ $('#restart').addEventListener('click',reset); reset();
+})();
+</script>
+</body>
+</html>
